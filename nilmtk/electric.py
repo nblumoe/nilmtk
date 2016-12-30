@@ -235,7 +235,7 @@ class Electric(object):
         return good_sections.uptime()
 
     def average_energy_per_period(self, offset_alias='D', use_uptime=True, **load_kwargs):
-        """Calculate the average energy per period.  e.g. the average 
+        """Calculate the average energy per period.  e.g. the average
         energy per day.
 
         Parameters
@@ -265,11 +265,11 @@ class Electric(object):
         periods = uptime_secs / offset_alias_to_seconds(offset_alias)
         energy = self.total_energy(**load_kwargs)
         return energy / periods
-        
+
     def proportion_of_energy(self, other, **loader_kwargs):
         """Compute the proportion of energy of self compared to `other`.
 
-        By default, only uses other.good_sections().  You may want to set 
+        By default, only uses other.good_sections().  You may want to set
         `sections=self.good_sections().intersection(other.good_sections())`
 
         Parameters
@@ -298,7 +298,7 @@ class Electric(object):
         shared_ac_types = set(other_ac_types).intersection(self_ac_types)
         n_shared_ac_types = len(shared_ac_types)
         if n_shared_ac_types > 1:
-            return (total_energy[shared_ac_types] / 
+            return (total_energy[shared_ac_types] /
                     other_total_energy[shared_ac_types]).mean()
         elif n_shared_ac_types == 0:
             ac_type = select_best_ac_type(self_ac_types)
@@ -312,9 +312,9 @@ class Electric(object):
 
     def correlation(self, other, **load_kwargs):
         """
-        Finds the correlation between the two ElecMeters. Both the ElecMeters 
+        Finds the correlation between the two ElecMeters. Both the ElecMeters
         should be perfectly aligned
-        Adapted from: 
+        Adapted from:
         http://www.johndcook.com/blog/2008/11/05/how-to-calculate-pearson-correlation-accurately/
 
         Parameters
@@ -345,7 +345,7 @@ class Electric(object):
             return np.NaN
 
         # we're using Python 3's division (which returns a float)
-        x_bar = x_sum / x_n 
+        x_bar = x_sum / x_n
         y_bar = y_sum / y_n
 
         # Second pass is used to find x_s and y_s (std.devs)
@@ -360,7 +360,7 @@ class Electric(object):
         y_s = stdev(other, y_bar, y_n)
 
         numerator = 0.0
-        for (x_power, y_power) in zip(self.power_series(**load_kwargs), 
+        for (x_power, y_power) in zip(self.power_series(**load_kwargs),
                                        other.power_series(**load_kwargs)):
             xi_minus_xbar = x_power - x_bar
             del x_power
@@ -402,7 +402,7 @@ class Electric(object):
         Returns
         -------
         matplotlib.axis
-        """ 
+        """
         if ax is None:
             ax = plt.gca()
         Fs = 1.0/self.sample_period()
@@ -421,16 +421,16 @@ class Electric(object):
         ax.set_xlabel('Freq (Hz)')
         ax.set_ylabel('|Y(freq)|')
         return ax
-          
+
     def plot_autocorrelation(self, ax=None):
         """
-        Plots autocorrelation of power data 
-        Reference: 
+        Plots autocorrelation of power data
+        Reference:
         http://www.itl.nist.gov/div898/handbook/eda/section3/autocopl.htm
 
         Returns
         -------
-        matplotlib.axis 
+        matplotlib.axis
         """
         if ax is None:
             ax = plt.gca()
@@ -438,7 +438,7 @@ class Electric(object):
             autocorrelation_plot(power, ax=ax)
         return ax
 
-    def plot_power_histogram(self, ax=None, load_kwargs=None, 
+    def plot_power_histogram(self, ax=None, load_kwargs=None,
                              plot_kwargs=None, range=None, **hist_kwargs):
         """
         Parameters
@@ -467,7 +467,7 @@ class Electric(object):
             maximum = None if range is None else range[1]
             range = (self.on_power_threshold(), maximum)
 
-        hist, bins = histogram_from_generator(generator, range=range, 
+        hist, bins = histogram_from_generator(generator, range=range,
                                               **hist_kwargs)
 
         # Plot
@@ -485,7 +485,7 @@ class Electric(object):
 
         Parameters
         ----------
-        threshold: int, threshold in Watts between succcessive readings 
+        threshold: int, threshold in Watts between succcessive readings
         to amount for an appliance state change
         """
 
@@ -497,13 +497,13 @@ class Electric(object):
         return flatten_2d_list(datetime_switches)
 
     def entropy(self, k=3, base=2):
-        """ 
+        """
         This implementation is provided courtesy NPEET toolbox,
         the authors kindly allowed us to directly use their code.
-        As a courtesy procedure, you may wish to cite their paper, 
+        As a courtesy procedure, you may wish to cite their paper,
         in case you use this function.
         This fails if there is a large number of records. Need to
-        ask the authors what to do about the same! 
+        ask the authors what to do about the same!
         The classic K-L k-nearest neighbor continuous entropy estimator
         x should be a list of vectors, e.g. x = [[1.3],[3.7],[5.1],[2.4]]
         if x is a one-dimensional scalar and we have four samples
@@ -524,19 +524,19 @@ class Electric(object):
         for power in self.power_series():
             x = power.values
             num_elements = len(x)
-            x = x.reshape((num_elements, 1))            
+            x = x.reshape((num_elements, 1))
             if num_elements > MAX_SIZE_ENTROPY:
 
                 splits = num_elements/MAX_SIZE_ENTROPY + 1
                 y = np.array_split(x, splits)
-                for z in y:            
-                    out.append(kdtree_entropy(z))                    
+                for z in y:
+                    out.append(kdtree_entropy(z))
             else:
                 out.append(kdtree_entropy(x))
         return sum(out)/len(out)
 
     def mutual_information(self, other, k=3, base=2):
-        """ 
+        """
         Mutual information of two ElecMeters
         x,y should be a list of vectors, e.g. x = [[1.3],[3.7],[5.1],[2.4]]
         if x is a one-dimensional scalar and we have four samples
@@ -555,7 +555,7 @@ class Electric(object):
             dvec = [tree.query(point, k+1, p=float('inf'))[0][k] for point in points]
             a, b, c, d = avgdigamma(x, dvec), avgdigamma(y, dvec), digamma(k), digamma(len(x))
             return (-a-b+c+d)/log(base)
-            
+
         def zip2(*args):
             # zip2(x,y) takes the lists of vectors and makes it a list of vectors in a joint space
             # E.g. zip2([[1],[2],[3]],[[4],[5],[6]]) = [[1,4],[2,5],[3,6]]
@@ -569,19 +569,19 @@ class Electric(object):
             avg = 0.
             for i in range(N):
                 dist = dvec[i]
-                #subtlety, we don't include the boundary point, 
+                #subtlety, we don't include the boundary point,
                 #but we are implicitly adding 1 to kraskov def bc center point is included
-                num_points = len(tree.query_ball_point(points[i],dist-1e-15,p=float('inf'))) 
+                num_points = len(tree.query_ball_point(points[i],dist-1e-15,p=float('inf')))
                 avg += digamma(num_points)/N
             return avg
 
         out = []
         for power_x, power_y in zip(self.power_series(), other.power_series()):
             power_x_val = power_x.values
-            power_y_val = power_y.values 
+            power_y_val = power_y.values
             num_elements = len(power_x_val)
             power_x_val = power_x_val.reshape((num_elements, 1))
-            power_y_val = power_y_val.reshape((num_elements, 1))            
+            power_y_val = power_y_val.reshape((num_elements, 1))
             if num_elements > MAX_SIZE_ENTROPY:
                 splits = num_elements/MAX_SIZE_ENTROPY + 1
                 x_split = np.array_split(power_x_val, splits)
@@ -672,7 +672,7 @@ class Electric(object):
         hist : np.ndarray
             length will be `period / bin_duration`
         """
-        n_bins = (offset_alias_to_seconds(period) / 
+        n_bins = (offset_alias_to_seconds(period) /
                   offset_alias_to_seconds(bin_duration))
         if n_bins != int(n_bins):
             raise ValueError('`bin_duration` must exactly divide the'
