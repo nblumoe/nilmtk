@@ -1,0 +1,44 @@
+* Pandas version issues
+  - plotting REFIT data works with pandas==0.17.1 but not with 0.19.1
+    lower version prevents "cannot reindex a non-unique index with a method or limit"
+* set_window issues
+  when using set_window on the REFIT dataset, this breaks plotting, resulting in an error
+  "ValueError: Values falls after last bin"
+  - with some dates it works though, e.g. 02-07-2014 for refit.h5
+  #+BEGIN_SRC
+  safe_resample(df, **resample_kwargs)
+  *** TypeError: resample() takes at least 2 arguments (3 given)
+  (Pdb) resample_kwargs
+  {'limit': 1, 'fill_method': 'ffill'}
+  (Pdb) s
+  > /Users/nblu/Projects/16-01_ewyso/src/nilmtk/nilmtk/electric.py(145)resample_func()
+  -> return safe_resample(df, **resample_kwargs)
+  (Pdb) resample_kwargs
+  {'limit': 1, 'rule': '69002S', 'fill_method': 'ffill'}
+  (Pdb) sample_period
+  69002
+  #+END_SRC
+
+  For some reason there are a lot of non-unique timestamps:
+
+  #+BEGIN_SRC python
+  len(uniq)
+  7411473
+  len(df.index.values)
+  7633069
+  #+END_SRC
+
+  Duplicates can occur multiple times, no obvious pattern:
+  #+BEGIN_SRC python
+  dict(Counter(df.index.values).most_common(10))
+  {numpy.datetime64('2014-07-27T20:43:16.000000000'): 6,
+   numpy.datetime64('2014-08-05T21:31:20.000000000'): 5,
+   numpy.datetime64('2014-05-16T14:28:56.000000000'): 5,
+   numpy.datetime64('2014-07-10T14:54:20.000000000'): 5,
+   numpy.datetime64('2014-07-27T23:21:55.000000000'): 5,
+   numpy.datetime64('2014-08-05T22:00:40.000000000'): 5,
+   numpy.datetime64('2014-09-29T12:49:51.000000000'): 5,
+   numpy.datetime64('2014-05-29T00:15:56.000000000'): 5,
+   numpy.datetime64('2014-07-28T00:36:41.000000000'): 5,
+   numpy.datetime64('2014-09-23T06:26:31.000000000'): 5}
+  #+END_SRC
